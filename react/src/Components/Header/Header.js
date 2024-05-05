@@ -2,25 +2,25 @@ import styles from "./Header.module.css"
 import {useState} from "react";
 import axios from 'axios';
 
-export default function Header({setData}) {
+export default function Header({setData, setForm}) {
   const [query, setQuery] = useState("");
-  const [form, setForm] = useState(false)
 
   const sendQuery = async (query) => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/search`, {
-        query: query
+      const {data} = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/search`, {
+        product: query,
       });
-      setData(response)  
+      console.log(data);
+      setData(data)  
     } catch (error) {
-      console.log(error.response.data.message);
+      console.log(error.response);
     }
   }
 
   return (
     <header>
         <div>
-            <h1>zero</h1>
+            <img src="https://i.ibb.co/9yJSrW9/zero-high-resolution-logo-transparent.png"></img>
         </div>
         <div>
             <input type="search" placeholder="Search"

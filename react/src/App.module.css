@@ -10,3 +10,12 @@
     width: 75%;
     row-gap: 20px;
 }
+
+.copyright {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    margin-top: 60px;
+    padding: 20px;
+    text-align: center;
+    width: 100%; 
+  }
