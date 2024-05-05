@@ -3,98 +3,39 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import sqlite3
-from database import add_user, add_product
-
-
+from flask_cors import CORS, cross_origin
 
 # Initialize the Flask app
 app = Flask(__name__)
 
-
+# initialize cors
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Define a route for the root URL
 @app.route('/')
 def index():
     return "Welcome to my Flask API agaerfddddddddfdadadadada!"
 
+
 # Post Product function (Izabella)
-@app.route('/new_user', methods=['POST'])
-def add_user()->None:
-    # Get data from request
-    data = request.json
-    
-    # Extract email details
-    user_email = data.get('user_email')
-    user_first_name = data.get('user_first_name')
-    user_last_name = data.get('user_last_name')
-    
-    try:
-        # Connect to database
-        conn = sqlite3.connect('database.db')
-
-        # Create a cursor
-        c = conn.cursor()
-        
-        # Insert instances
-        # many_users = [
-        #     (0, 'John', 'Elder', 'john@codem.com'),
-        #     (1, 'John', 'Elder', 'john@codem.com'),
-        #     (2, 'John', 'Elder', 'john@codem.com')
-        #     ]
-        #c.executemany("INSERT INTO producers VALUES (?,?,?);", many_customers)
-
-        # c.execute("INSERT INTO users VALUES (NULL, ?, ?, ?);", ('John', 'Elder', 'john@codem.com'))
-        # c.execute("INSERT INTO users VALUES (NULL, ?, ?, ?);", ('Alice', 'Elder', 'alice@codem.com'))
-        # c.execute("INSERT INTO users VALUES (NULL, ?, ?, ?);", ('Emma', 'Elder', 'emma@codem.com'))
-        c.execute("SELECT count(*) FROM users WHERE first_name = user_first_name AND last_name = user_last_name AND email = user_email;")
-        for record in c:
-            if record[0] == 0:
-                c.execute("INSERT INTO users VALUES (NULL, ?, ?, ?);", user_first_name, user_last_name, user_email)
-    
-        c.execute("SELECT user_id FROM users WHERE first_name = user_first_name AND last_name = user_last_name AND email = user_email;")
-        for record in c:
-             = record[0]
-        # # Display data
-        # c.execute("""SELECT * FROM customers;""")
-        # items = c.fetchall()
-        # print(items)
-
-        # c.execute("""SELECT * FROM producers;""")
-        # suppliers = c.fetchall()
-        # print(suppliers)
-
-        conn.commit()
-
-    except Exception as ex:
-        conn.rollback()
-        raise Exception(f"Couldn't set up environment for tests: \n{ex}")
-
-    finally:
-        if c and not c.close:
-            c.close()
-        if conn and not conn.close:
-            conn.close()
-
-
 @app.route('/new_product', methods=['POST'])
+@cross_origin()
 def add_product()->None:
     # Get data from request
     data = request.json
     
-    # Extract email details
-    user_id = data.get('user_id')
-    product_name = data.get('product_name')
-    amount = data.get('amount')
-    unit_price = data.get('unit_price')
-    product_addr = data.get('product_addr')
-    """
-    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_name text NOT NULL,
-    amount INTEGER NOT NULL,
-    price_per_unit REAL NOT NULL,
-    product_address NOT NULL,
-    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
-    """
+    # Extract data details
+    product = data.get('product')
+    quantity = data.get('quantity')
+    price = data.get('price')
+    location = data.get('location')
+    description = data.get('description')
+    user_email = data.get('farmer_email')
+    user_name = data.get('farmer_name')
+    image_link = data.get('image')
+
+ 
     conn, c = None, None
     try:
         # Connect to database
@@ -102,35 +43,25 @@ def add_product()->None:
 
         # Create a cursor
         c = conn.cursor()
-        
-        # Insert instances
-        # many_products = [
-        #     (0, 'Food1', 10, 11.1, '100 Queen Street', 0),
-        #     (1, 'Food2', 20, 22.2, '200 King Avenue', 1),
-        #     (2, 'Food3', 30, 33.3, '300 Cat Boulevard', 2)
-        #     ]
-
-        # c.execute("INSERT INTO products VALUES (NULL, ?, ?, ?, ?, ?);", ('Food1', 10, 11.1, '100 Queen Street', 1))
-        # c.execute("INSERT INTO products VALUES (NULL, ?, ?, ?, ?, ?);", ('Food2', 20, 22.2, '200 King Avenue', 2))
-        # c.execute("INSERT INTO products VALUES (NULL, ?, ?, ?, ?, ?);", ('Food3', 30, 33.3, '300 Cat Boulevard', 3))
-        c.execute("SELECT count(*) FROM users WHERE product_name = product_name AND amount = amount AND email = user_email;")
+       
+        c.execute("SELECT count(*) FROM users WHERE farmer_name == ? AND farmer_email == ?;", (user_name, user_email))
         for record in c:
             if record[0] == 0:
+                c.execute("INSERT INTO users VALUES (NULL, ?, ?);", (user_name, user_email))
+                
+        c.execute("SELECT user_id FROM users WHERE farmer_name == ? AND farmer_email == ?;", (user_name, user_email))
+        for record in c:
+            user_id = record[0]
 
-        c.execute("INSERT INTO products VALUES (NULL, ?, ?, ?, ?, ?, ?);", product_name, amount, unit_price, product_addr, user_id)
-        
-        #c.execute("INSERT INTO producers VALUES (?,?,?);", many_customers)
-        
-        # # Display data
-        # c.execute("""SELECT * FROM customers;""")
-        # items = c.fetchall()
-        # print(items)
-
-        # c.execute("""SELECT * FROM producers;""")
-        # suppliers = c.fetchall()
-        # print(suppliers)
+        c.execute("SELECT count(*) FROM products WHERE product == ? AND quantity == ? AND price  == ? AND location == ? AND user_id == ?;", (product, quantity, price, location, user_id))
+        for record in c:
+            if record[0] == 0:
+                c.execute("INSERT INTO products VALUES (NULL, ?, ?, ?, ?, ?, ?, ?);", (product, quantity, price, location, description, image_link, user_id))
 
         conn.commit()
+
+        return jsonify("Successfully Added")
+
 
     except Exception as ex:
         conn.rollback()
@@ -145,15 +76,17 @@ def add_product()->None:
 # Emailing sending function (Winnie)
 
 @app.route('/send_email', methods=['POST'])
+@cross_origin()
 def send_email():
     # Get data from request
     data = request.json
-    
+    print("Data", data)
     # Extract email details
     user_email = data.get('user_email')
     product = data.get('product')
     farmer_name = data.get('farmer_name')
     farmer_email = data.get('farmer_email')
+    print(user_email, product, farmer_name, farmer_email)
     
     
     subject = f"New Product Interests from {user_email}"
@@ -202,7 +135,8 @@ def send_email():
 
     return jsonify({'message': 'Email sent successfully'}), 200
 
-@app.route('/get_data')
+@app.route('/get_data', methods=['POST'])
+@cross_origin()
 def get_data():
     try:
         # Connect to the database
@@ -210,7 +144,7 @@ def get_data():
         cursor = conn.cursor()
 
         # Execute SQL query to retrieve data
-        cursor.execute("SELECT name, location, price FROM your_table")
+        cursor.execute("SELECT DISTINCT farmer_name, farmer_email, product, quantity, price, location, description, image FROM products NATURAL JOIN users")
         
         # Fetch all rows from the result
         data = cursor.fetchall()
@@ -223,16 +157,26 @@ def get_data():
         data_dict_list = []
         for row in data:
             data_dict_list.append({
-                'name': row[0],
-                'location': row[1],
-                'price': row[2]
+                'farmer_name': row[0],
+                'farmer_email': row[1],
+                'product': row[2],
+                'quantity': row[3],
+                'price': row[4],
+                'location': row[5],
+                'description': row[6],
+                'image': row[7]
             })
 
         # Return data as JSON response
         return jsonify(data_dict_list)
+        
     except sqlite3.Error as e:
         print("Database error:", e)
         return jsonify({'error': 'Database error'}), 500
+    
+    except Exception as ex:
+        conn.rollback()
+        raise Exception(f"Couldn't set up environment for tests: \n{ex}")
 
 
 # Search product by name (include database searching) (Jing)      
@@ -256,17 +200,18 @@ def setup() -> None:
         # Create Tables
         c.execute("""CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                first_name text NOT NULL,
-                last_name text NOT NULL,
-                email text NOT NULL
+                farmer_name text NOT NULL,
+                farmer_email text NOT NULL
             );""")
 
         c.execute("""CREATE TABLE IF NOT EXISTS products (
                 product_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                product_name text NOT NULL,
-                amount INTEGER NOT NULL,
-                price_per_unit REAL NOT NULL,
-                product_address NOT NULL,
+                product text NOT NULL,
+                quantity text NOT NULL,
+                price text NOT NULL,
+                location text NOT NULL,
+                description text,
+                image text,
                 user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
             );""")
 
@@ -283,12 +228,18 @@ def setup() -> None:
             conn.close()
 
 @app.route('/search', methods=['POST'])
+@cross_origin()
 def search():
+    
     # Get data from request
     data = request.json
     
     # Extract email details
-    product_name = data.get('product_name')
+    product = data.get('product')
+
+    print("Data", data)
+    print("Product", product)
+    
 
     try:
         # Connect to database
@@ -298,8 +249,8 @@ def search():
         c = conn.cursor()
 
         # Execute SQL query to retrieve products' and producers' information
-        c.execute("SELECT DISTINCT first_name, last_name, email, product_name, price_per_unit, amount FROM products NATURAL JOIN users WHERE product_name LIKE ?;", 
-            ('%' + product_name + '%',))
+        c.execute("SELECT DISTINCT farmer_name, farmer_email, product, quantity, price, location, description, image FROM products NATURAL JOIN users WHERE product LIKE ?;", 
+            ('%' + product + '%',))
         conn.commit()
 
         # Fetch all rows from the result
@@ -309,12 +260,14 @@ def search():
         data_dict_list = []
         for row in data:
             data_dict_list.append({
-                'first_name': row[0],
-                'last_name': row[1],
-                'email': row[2],
-                'product_name': row[3],
-                'price_per_unit': row[4],
-                'amount': row[5]
+                'farmer_name': row[0],
+                'farmer_email': row[1],
+                'product': row[2],
+                'quantity': row[3],
+                'price': row[4],
+                'location': row[5],
+                'description': row[6],
+                'image': row[7]
             })
 
         # Return data as JSON response
@@ -333,6 +286,4 @@ def search():
 # Run the Flask app
 if __name__ == '__main__':
     setup()
-    add_user()
-    add_product()
     app.run(debug=True)

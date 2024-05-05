@@ -15,6 +15,11 @@
   box-shadow: 1px 1px 1px 1px rgb(190, 190, 190);
   cursor: pointer;
 }
+.card .imageHovered {
+  /* Define hover effect styles */
+  transform: scale(1.15); /* Example: Scale the image by 10% on hover */
+  opacity: 0.6;
+}
 
 .card .info {
   display: flex;
@@ -46,4 +51,7 @@
   outline: none;
   height: 40px;
   padding: 0 10px;
+}
+.card button:hover {
+  background-color: rgb(73, 182, 147); /* Change the background color on hover */
 }
